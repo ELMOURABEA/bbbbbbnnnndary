@@ -1,33 +1,43 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Headphones,
+  Home,
   Menu,
   MessageCircle,
   Phone,
   Search,
   ShoppingBag,
+  Store,
   Upload,
+  UserRound,
   X,
 } from "lucide-react";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { COMPLAINTS, HOTLINE } from "@/data/network";
+import { allows } from "@/lib/access";
 import { cartCount, L, useBendary } from "@/lib/store";
 import { ChatWidget } from "@/components/chat-widget";
+import { Door } from "@/components/door";
 
-const links = [
-  { to: "/shop", ar: "المتجر", en: "Shop" },
+const customerLinks = [
+  { to: "/", ar: "الرئيسية", en: "Home" },
+  { to: "/shop", ar: "المتجر", en: "Market" },
   { to: "/branches", ar: "الفروع", en: "Branches" },
   { to: "/prescription", ar: "الروشتة", en: "Prescription" },
-  { to: "/insurance", ar: "التأمين", en: "Insurance" },
   { to: "/track", ar: "التتبع", en: "Track" },
-  { to: "/assistant", ar: "الصيدلي", en: "Pharmacist" },
-  { to: "/mostaa", ar: "MoSTaa-ChaT", en: "MoSTaa-ChaT" },
+  { to: "/mostaa", ar: "محادثاتي", en: "My chats" },
+  { to: "/account", ar: "حسابي", en: "Account" },
 ] as const;
 
 export function Shell({ children }: { children: ReactNode }) {
   const lang = useBendary((s) => s.lang);
   const setLang = useBendary((s) => s.setLang);
   const cart = useBendary((s) => s.cart);
+  const portal = useBendary((s) => s.portal);
+  const role = useBendary((s) => s.role);
+  const matrix = useBendary((s) => s.matrix);
+  const displayName = useBendary((s) => s.displayName);
+  const leave = useBendary((s) => s.leave);
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -47,6 +57,26 @@ export function Shell({ children }: { children: ReactNode }) {
   useEffect(() => {
     setOpen(false);
   }, [path]);
+
+  if (!portal) {
+    return <Door />;
+  }
+
+  const teamLinks = [
+    allows(matrix, role, "desk") ? { to: "/mostaa", ar: "MoSTaa", en: "MoSTaa" } : null,
+    allows(matrix, role, "ops") ? { to: "/ops", ar: "التشغيل", en: "Ops" } : null,
+    allows(matrix, role, "stock") ? { to: "/stock", ar: "المخزون", en: "Stock" } : null,
+    allows(matrix, role, "pos") || allows(matrix, role, "purchase") || allows(matrix, role, "reports") || allows(matrix, role, "shift")
+      ? { to: "/finance", ar: "المالية", en: "Finance" }
+      : null,
+    allows(matrix, role, "team") ? { to: "/team", ar: "الحسابات", en: "Accounts" } : null,
+    allows(matrix, role, "branches") ? { to: "/branches", ar: "الفروع", en: "Branches" } : null,
+    { to: "/shop", ar: "المتجر", en: "Market" },
+  ].filter((item): item is { to: string; ar: string; en: string } => Boolean(item));
+
+  const links = portal === "customer" ? customerLinks : teamLinks;
+  const teamOnly = ["/ops", "/finance", "/stock", "/team"];
+  const blocked = portal === "customer" && teamOnly.some((item) => path === item);
 
   function onSearch(e: FormEvent) {
     e.preventDefault();
@@ -91,6 +121,14 @@ export function Shell({ children }: { children: ReactNode }) {
           </form>
 
           <div className="ms-auto flex items-center gap-1.5">
+            <span className="hidden max-w-32 truncate text-xs text-muted sm:inline">{displayName}</span>
+            <button
+              type="button"
+              onClick={() => leave()}
+              className="rounded-full border border-line px-3 py-2 text-xs font-semibold"
+            >
+              {L(lang, "خروج", "Leave")}
+            </button>
             <button
               type="button"
               onClick={() => setLang(ar ? "en" : "ar")}
@@ -142,9 +180,6 @@ export function Shell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
-          <Link to="/ops" className="ms-auto rounded-full px-3 py-1.5 text-sm text-muted hover:bg-sand">
-            {L(lang, "بوابة الفريق", "Team desk")}
-          </Link>
         </nav>
 
         {open && (
@@ -168,17 +203,23 @@ export function Shell({ children }: { children: ReactNode }) {
                   {ar ? item.ar : item.en}
                 </Link>
               ))}
-              <Link to="/ops" className="rounded-xl px-3 py-2.5 text-sm text-muted">
-                {L(lang, "بوابة الفريق", "Team desk")}
-              </Link>
             </div>
           </div>
         )}
       </header>
 
-      <main>{children}</main>
+      <main className={portal === "customer" ? "pb-20 md:pb-0" : undefined}>
+        {blocked ? (
+          <div className="mx-auto max-w-xl px-4 py-16 text-center">
+            <h1 className="font-display text-3xl font-extrabold">{L(lang, "هذه بوابة الفريق", "This is the team desk")}</h1>
+            <p className="mt-2 text-sm text-muted">{L(lang, "حساب العميل يرى الواجهة والمتجر والمحادثات فقط.", "A customer account only sees home, the market, and chats.")}</p>
+          </div>
+        ) : (
+          children
+        )}
+      </main>
 
-      <footer className="mt-16 border-t border-line bg-ink text-paper">
+      <footer className={`mt-10 border-t border-line bg-ink text-paper ${portal === "customer" ? "hidden md:block" : ""}`}>
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 md:grid-cols-4">
           <div className="md:col-span-2">
             <img src="/brand/logo.png" alt="" className="mb-4 h-16 w-auto rounded-xl bg-paper p-1" />
@@ -226,7 +267,50 @@ export function Shell({ children }: { children: ReactNode }) {
           {L(lang, "صيدليات البنداري © ٢٠٢٦ · رعاية من القلب", "El-Bendary Pharmacies © 2026")}
         </div>
       </footer>
-      <ChatWidget />
+      {portal === "customer" && <ChatWidget />}
+      {portal === "customer" && (
+        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
+          <Tab to="/" label={L(lang, "الرئيسية", "Home")} active={path === "/"}>
+            <Home className="size-5" />
+          </Tab>
+          <Tab to="/shop" label={L(lang, "المتجر", "Store")} active={path.startsWith("/shop") || path.startsWith("/product")} search={{ q: "", cat: "all", price: "all", stock: "all" }}>
+            <Store className="size-5" />
+          </Tab>
+          <Tab to="/prescription" label={L(lang, "روشتة", "Rx")} active={path === "/prescription"}>
+            <Upload className="size-5" />
+          </Tab>
+          <Tab to="/cart" label={L(lang, "السلة", "Cart")} active={path === "/cart"}>
+            <span className="relative">
+              <ShoppingBag className="size-5" />
+              {count > 0 && <span className="absolute -top-1 -end-2 size-2 rounded-full bg-red" />}
+            </span>
+          </Tab>
+          <Tab to="/account" label={L(lang, "حسابي", "Account")} active={path === "/account"}>
+            <UserRound className="size-5" />
+          </Tab>
+        </nav>
+      )}
     </div>
+  );
+}
+
+function Tab({
+  to,
+  label,
+  active,
+  search,
+  children,
+}: {
+  to: "/" | "/shop" | "/cart" | "/account" | "/prescription";
+  label: string;
+  active: boolean;
+  search?: { q: string; cat: string; price: string; stock: string };
+  children: ReactNode;
+}) {
+  return (
+    <Link to={to} search={search} className={`flex flex-col items-center gap-0.5 py-2 text-[10px] font-semibold ${active ? "text-red" : "text-muted"}`}>
+      {children}
+      {label}
+    </Link>
   );
 }

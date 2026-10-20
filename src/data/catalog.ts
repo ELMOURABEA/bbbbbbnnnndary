@@ -6,7 +6,12 @@ export type CategoryId =
   | "beauty"
   | "vitamins"
   | "mother"
-  | "devices";
+  | "devices"
+  | "medicine"
+  | "allergy"
+  | "pain"
+  | "diabetes"
+  | "fragrance";
 
 export type Product = {
   sku: string;
@@ -24,17 +29,22 @@ export type Product = {
 };
 
 export const categories: { id: CategoryId; ar: string; en: string }[] = [
-  { id: "digestion", ar: "مضادات الحموضة", en: "Digestion" },
-  { id: "skin", ar: "العناية بالبشرة", en: "Skin" },
-  { id: "hair", ar: "العناية بالشعر", en: "Hair" },
-  { id: "personal", ar: "العناية الشخصية", en: "Personal care" },
-  { id: "beauty", ar: "مستحضرات التجميل", en: "Beauty" },
+  { id: "medicine", ar: "أدوية", en: "Medicines" },
+  { id: "digestion", ar: "الجهاز الهضمي", en: "Digestion" },
+  { id: "pain", ar: "الألم والالتهاب", en: "Pain" },
+  { id: "allergy", ar: "الحساسية", en: "Allergy" },
+  { id: "diabetes", ar: "السكر", en: "Diabetes" },
   { id: "vitamins", ar: "فيتامينات ومكملات", en: "Vitamins" },
   { id: "mother", ar: "الأم والطفل", en: "Mother & baby" },
+  { id: "skin", ar: "العناية بالبشرة", en: "Skin" },
+  { id: "hair", ar: "العناية بالشعر", en: "Hair" },
+  { id: "beauty", ar: "مستحضرات التجميل", en: "Beauty" },
+  { id: "fragrance", ar: "عطور", en: "Fragrance" },
+  { id: "personal", ar: "العناية الشخصية", en: "Personal care" },
   { id: "devices", ar: "أجهزة طبية", en: "Devices" },
 ];
 
-export const products: Product[] = [
+export const featured: Product[] = [
   {
     sku: "GA",
     nameEn: "Gaviscon Liquid 24 Sachets",
@@ -312,6 +322,47 @@ export const products: Product[] = [
     blurbAr: "جهاز ذراع. الصيدلي يضبط مقاس السوار معك.",
   },
 ];
+
+import shelfRows from "./shelf.json";
+
+const shelfBlurbs: Record<CategoryId, [string, string]> = {
+  digestion: ["Digestive care from the branch shelf.", "عناية هضمية من رف الفرع."],
+  skin: ["Skin care. Ask the counter if you need a match for your skin.", "عناية بالبشرة. اسأل الصيدلي لو محتاج الأنسب لبشرتك."],
+  hair: ["Hair care kept in stock across Bendary branches.", "عناية بالشعر متوفرة في فروع البنداري."],
+  personal: ["Everyday personal care.", "عناية شخصية للاستخدام اليومي."],
+  beauty: ["Beauty counter item. Shades can vary by branch.", "من ركن التجميل. الدرجات تختلف حسب الفرع."],
+  vitamins: ["Supplement. Not a substitute for a prescribed plan.", "مكمل غذائي، لا يغني عن خطة وصفها الطبيب."],
+  mother: ["Mother and baby care.", "عناية الأم والطفل."],
+  devices: ["Home health device. A pharmacist can check the fit.", "جهاز منزلي. الصيدلي يراجع المقاس معك."],
+  medicine: ["Medicine from the live catalog. A pharmacist confirms before it leaves the branch.", "دواء من كتالوج الفرع. الصيدلي يراجع الصرف قبل التسليم."],
+  allergy: ["Allergy care. Tell the pharmacist what else you take.", "علاج حساسية. أخبر الصيدلي بأي أدوية أخرى."],
+  pain: ["Pain and inflammation care.", "مسكن أو مضاد التهاب."],
+  diabetes: ["Diabetes care. Cold items stay in the fridge chain.", "رعاية السكر. الأصناف المبردة تبقى في سلسلة التبريد."],
+  fragrance: ["Fragrance from the beauty counter.", "عطر من ركن العطور."],
+};
+
+type ShelfRow = [string, string, string, CategoryId, number, number, number, number];
+
+const fromShelf: Product[] = (shelfRows as ShelfRow[]).map((row) => {
+  const [sku, nameEn, nameAr, category, price, stock, rx, cold] = row;
+  const blurb = shelfBlurbs[category] ?? shelfBlurbs.personal;
+  return {
+    sku,
+    nameEn,
+    nameAr,
+    category,
+    price,
+    stock,
+    rx: rx === 1,
+    cold: cold === 1,
+    blurbEn: blurb[0],
+    blurbAr: blurb[1],
+  };
+});
+
+const featuredSkus = new Set(featured.map((p) => p.sku));
+
+export const products: Product[] = [...featured, ...fromShelf.filter((p) => !featuredSkus.has(p.sku))];
 
 export function categoryName(id: CategoryId, lang: "ar" | "en") {
   const c = categories.find((x) => x.id === id);

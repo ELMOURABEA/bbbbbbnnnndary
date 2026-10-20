@@ -3,26 +3,21 @@ import { useEffect, useState } from "react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { Shell } from "@/components/shell";
 import { findProduct } from "@/data/catalog";
-import { batches, branchById, branches, daysUntil } from "@/data/network";
-import { L, useBendary, type Role } from "@/lib/store";
+import { batches, daysUntil } from "@/data/network";
+import { allows, roleLabel } from "@/lib/access";
+import { L, useBendary, useBranchBook } from "@/lib/store";
 
 export const Route = createFileRoute("/ops")({
   head: () => ({ meta: [{ title: "عمليات الفروع | El-Bendary" }] }),
   component: OpsPage,
 });
 
-const roles: { id: Role; ar: string; en: string }[] = [
-  { id: "manager", ar: "مدير الفرع", en: "Branch manager" },
-  { id: "pharmacist", ar: "صيدلي", en: "Pharmacist" },
-  { id: "inventory", ar: "المخزون", en: "Inventory" },
-  { id: "cashier", ar: "كاشير", en: "Cashier" },
-  { id: "delivery", ar: "التوصيل", en: "Delivery" },
-];
+const roles = roleLabel;
 
 function OpsPage() {
   const lang = useBendary((s) => s.lang);
   const role = useBendary((s) => s.role);
-  const setRole = useBendary((s) => s.setRole);
+  const matrix = useBendary((s) => s.matrix);
   const orders = useBendary((s) => s.orders);
   const rxs = useBendary((s) => s.rxs);
   const tenders = useBendary((s) => s.tenders);
@@ -34,10 +29,21 @@ function OpsPage() {
     .map((b) => ({ ...b, days: daysUntil(b.expiry) }))
     .sort((a, b) => a.days - b.days);
 
-  const chart = branches.slice(0, 6).map((b) => ({
+  const book = useBranchBook();
+  const chart = book.slice(0, 6).map((b) => ({
     name: lang === "ar" ? b.nameAr : b.nameEn,
     orders: orders.filter((o) => o.branchId === b.id).length + (b.main ? 4 : 1),
   }));
+
+  if (!allows(matrix, role, "ops")) {
+    return (
+      <Shell>
+        <p className="mx-auto max-w-xl px-4 py-16 text-center text-sm text-muted">
+          {L(lang, "هذا الدور لا يفتح التشغيل.", "This role does not open operations.")}
+        </p>
+      </Shell>
+    );
+  }
 
   return (
     <Shell>
@@ -51,13 +57,10 @@ function OpsPage() {
             "An internal sample board. Records stay on this device. In live service they are stored encrypted and shown only to the shift role.",
           )}
         </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {roles.map((r) => (
-            <button key={r.id} type="button" onClick={() => setRole(r.id)} className={`rounded-full px-3 py-1.5 text-sm font-semibold ${role === r.id ? "bg-ink text-paper" : "bg-sand"}`}>
-              {L(lang, r.ar, r.en)}
-            </button>
-          ))}
-        </div>
+        <p className="mt-2 text-sm font-semibold">
+          {L(lang, "الدور الحالي", "Signed in as")}{" "}
+          {L(lang, roles.find((r) => r.id === role)?.ar ?? role, roles.find((r) => r.id === role)?.en ?? role)}
+        </p>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label={L(lang, "طلبات المتجر", "Store orders")} value={String(orders.length)} />
@@ -66,7 +69,7 @@ function OpsPage() {
           <Stat label={L(lang, "قرب انتهاء", "Near expiry")} value={String(near.filter((b) => b.days < 120).length)} />
         </div>
 
-        {(role === "manager" || role === "inventory") && (
+        {(allows(matrix, role, "stock") || role === "pharmacist") && (
           <section className="mt-8">
             <h2 className="font-display text-2xl font-bold">{L(lang, "صرف الأقرب انتهاء أولاً", "First expiry, first out")}</h2>
             <div className="mt-3 overflow-x-auto rounded-card border border-line bg-surface">
@@ -83,7 +86,7 @@ function OpsPage() {
                 <tbody>
                   {near.map((b) => {
                     const product = findProduct(b.sku);
-                    const branch = branchById(b.branchId);
+                    const branch = book.find((item) => item.id === b.branchId);
                     const hot = b.days < 120;
                     return (
                       <tr key={b.batch} className="border-t border-line">
@@ -103,7 +106,7 @@ function OpsPage() {
           </section>
         )}
 
-        {role === "manager" && (
+        {(role === "owner" || role === "manager") && (
           <section className="mt-8 rounded-card border border-line bg-surface p-4">
             <h2 className="font-display text-2xl font-bold">{L(lang, "حجم الفروع", "Branch volume")}</h2>
             <div className="mt-4 h-64">
@@ -120,7 +123,7 @@ function OpsPage() {
           </section>
         )}
 
-        {role === "pharmacist" && (
+        {(role === "pharmacist" || role === "owner" || role === "manager") && (
           <section className="mt-8">
             <h2 className="font-display text-2xl font-bold">{L(lang, "طابور الروشتات", "Prescription queue")}</h2>
             <ul className="mt-3 space-y-2">
@@ -135,7 +138,7 @@ function OpsPage() {
           </section>
         )}
 
-        {role === "cashier" && (
+        {(role === "cashier" || role === "owner" || role === "manager") && (
           <section className="mt-8">
             <h2 className="font-display text-2xl font-bold">{L(lang, "التحصيل", "Tenders")}</h2>
             <ul className="mt-3 space-y-2">
@@ -149,13 +152,13 @@ function OpsPage() {
           </section>
         )}
 
-        {role === "delivery" && (
+        {(role === "driver" || role === "owner" || role === "manager") && (
           <section className="mt-8">
             <h2 className="font-display text-2xl font-bold">{L(lang, "في التجهيز", "Out for preparation")}</h2>
             <ul className="mt-3 space-y-2">
               {orders.length === 0 && <li className="text-sm text-muted">{L(lang, "لا طلبات توصيل بعد.", "No delivery orders yet.")}</li>}
               {orders.map((o) => {
-                const branch = branchById(o.branchId);
+                const branch = book.find((item) => item.id === o.branchId);
                 return (
                   <li key={o.id} className="rounded-2xl border border-line bg-surface px-4 py-3 text-sm">
                     <p className="font-semibold">{o.id} · {o.customer}</p>

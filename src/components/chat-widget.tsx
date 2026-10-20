@@ -6,7 +6,9 @@ export function ChatWidget() {
   const lang = useBendary((s) => s.lang);
   const visitor = useBendary((s) => s.visitor);
   const setVisitor = useBendary((s) => s.setVisitor);
-  const thread = useBendary((s) => s.conversations.find((c) => c.id === "c-web-visitor"));
+  const phone = useBendary((s) => s.phone);
+  const threadId = phone ? `c-cust-${phone}` : "c-web-visitor";
+  const thread = useBendary((s) => s.conversations.find((c) => c.id === threadId));
   const ensureWebThread = useBendary((s) => s.ensureWebThread);
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");

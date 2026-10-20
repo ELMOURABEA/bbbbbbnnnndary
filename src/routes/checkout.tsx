@@ -2,8 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Shell } from "@/components/shell";
 import { money } from "@/data/catalog";
-import { branches } from "@/data/network";
-import { cartDetailed, L, useBendary, type PayMethod } from "@/lib/store";
+import { cartDetailed, L, useBendary, useBranchBook, type PayMethod } from "@/lib/store";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({ meta: [{ title: "الدفع | El-Bendary" }] }),
@@ -20,6 +19,7 @@ const methods: { id: PayMethod; ar: string; en: string; hintAr: string; hintEn: 
 
 function CheckoutPage() {
   const lang = useBendary((s) => s.lang);
+  const branches = useBranchBook();
   const cart = useBendary((s) => s.cart);
   const place = useBendary((s) => s.placeOrder);
   const lines = cartDetailed(cart);

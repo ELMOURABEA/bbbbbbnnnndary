@@ -10,21 +10,30 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as BranchesRouteImport } from './routes/branches'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as FinanceRouteImport } from './routes/finance'
 import { Route as InsuranceRouteImport } from './routes/insurance'
 import { Route as MostaaRouteImport } from './routes/mostaa'
 import { Route as OpsRouteImport } from './routes/ops'
 import { Route as PrescriptionRouteImport } from './routes/prescription'
 import { Route as ShopRouteImport } from './routes/shop'
+import { Route as StockRouteImport } from './routes/stock'
+import { Route as TeamRouteImport } from './routes/team'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as ProductSkuRouteImport } from './routes/product.$sku'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AssistantRoute = AssistantRouteImport.update({
@@ -45,6 +54,11 @@ const CartRoute = CartRouteImport.update({
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinanceRoute = FinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InsuranceRoute = InsuranceRouteImport.update({
@@ -72,6 +86,16 @@ const ShopRoute = ShopRouteImport.update({
   path: '/shop',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StockRoute = StockRouteImport.update({
+  id: '/stock',
+  path: '/stock',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamRoute = TeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrackRoute = TrackRouteImport.update({
   id: '/track',
   path: '/track',
@@ -85,44 +109,56 @@ const ProductSkuRoute = ProductSkuRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/assistant': typeof AssistantRoute
   '/branches': typeof BranchesRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/finance': typeof FinanceRoute
   '/insurance': typeof InsuranceRoute
   '/mostaa': typeof MostaaRoute
   '/ops': typeof OpsRoute
   '/prescription': typeof PrescriptionRoute
   '/shop': typeof ShopRoute
+  '/stock': typeof StockRoute
+  '/team': typeof TeamRoute
   '/track': typeof TrackRoute
   '/product/$sku': typeof ProductSkuRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/assistant': typeof AssistantRoute
   '/branches': typeof BranchesRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/finance': typeof FinanceRoute
   '/insurance': typeof InsuranceRoute
   '/mostaa': typeof MostaaRoute
   '/ops': typeof OpsRoute
   '/prescription': typeof PrescriptionRoute
   '/shop': typeof ShopRoute
+  '/stock': typeof StockRoute
+  '/team': typeof TeamRoute
   '/track': typeof TrackRoute
   '/product/$sku': typeof ProductSkuRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/assistant': typeof AssistantRoute
   '/branches': typeof BranchesRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/finance': typeof FinanceRoute
   '/insurance': typeof InsuranceRoute
   '/mostaa': typeof MostaaRoute
   '/ops': typeof OpsRoute
   '/prescription': typeof PrescriptionRoute
   '/shop': typeof ShopRoute
+  '/stock': typeof StockRoute
+  '/team': typeof TeamRoute
   '/track': typeof TrackRoute
   '/product/$sku': typeof ProductSkuRoute
 }
@@ -130,58 +166,74 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/account'
     | '/assistant'
     | '/branches'
     | '/cart'
     | '/checkout'
+    | '/finance'
     | '/insurance'
     | '/mostaa'
     | '/ops'
     | '/prescription'
     | '/shop'
+    | '/stock'
+    | '/team'
     | '/track'
     | '/product/$sku'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/account'
     | '/assistant'
     | '/branches'
     | '/cart'
     | '/checkout'
+    | '/finance'
     | '/insurance'
     | '/mostaa'
     | '/ops'
     | '/prescription'
     | '/shop'
+    | '/stock'
+    | '/team'
     | '/track'
     | '/product/$sku'
   id:
     | '__root__'
     | '/'
+    | '/account'
     | '/assistant'
     | '/branches'
     | '/cart'
     | '/checkout'
+    | '/finance'
     | '/insurance'
     | '/mostaa'
     | '/ops'
     | '/prescription'
     | '/shop'
+    | '/stock'
+    | '/team'
     | '/track'
     | '/product/$sku'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
   AssistantRoute: typeof AssistantRoute
   BranchesRoute: typeof BranchesRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
+  FinanceRoute: typeof FinanceRoute
   InsuranceRoute: typeof InsuranceRoute
   MostaaRoute: typeof MostaaRoute
   OpsRoute: typeof OpsRoute
   PrescriptionRoute: typeof PrescriptionRoute
   ShopRoute: typeof ShopRoute
+  StockRoute: typeof StockRoute
+  TeamRoute: typeof TeamRoute
   TrackRoute: typeof TrackRoute
   ProductSkuRoute: typeof ProductSkuRoute
 }
@@ -193,6 +245,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/assistant': {
@@ -221,6 +280,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout'
       fullPath: '/checkout'
       preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance': {
+      id: '/finance'
+      path: '/finance'
+      fullPath: '/finance'
+      preLoaderRoute: typeof FinanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/insurance': {
@@ -258,6 +324,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/stock': {
+      id: '/stock'
+      path: '/stock'
+      fullPath: '/stock'
+      preLoaderRoute: typeof StockRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/team': {
+      id: '/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/track': {
       id: '/track'
       path: '/track'
@@ -277,15 +357,19 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
   AssistantRoute: AssistantRoute,
   BranchesRoute: BranchesRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
+  FinanceRoute: FinanceRoute,
   InsuranceRoute: InsuranceRoute,
   MostaaRoute: MostaaRoute,
   OpsRoute: OpsRoute,
   PrescriptionRoute: PrescriptionRoute,
   ShopRoute: ShopRoute,
+  StockRoute: StockRoute,
+  TeamRoute: TeamRoute,
   TrackRoute: TrackRoute,
   ProductSkuRoute: ProductSkuRoute,
 }

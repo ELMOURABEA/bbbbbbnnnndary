@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { Shell } from "@/components/shell";
 import { bandLabel, priceBand, ProductCard } from "@/components/product-card";
 import { categories, products } from "@/data/catalog";
@@ -26,6 +27,7 @@ function ShopPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const lang = useBendary((s) => s.lang);
+  const [shown, setShown] = useState(36);
 
   const list = products.filter((p) => {
     const blob = `${p.nameAr} ${p.nameEn} ${p.sku}`.toLowerCase();
@@ -37,6 +39,7 @@ function ShopPage() {
   });
 
   function setSearch(patch: Partial<ShopSearch>) {
+    setShown(36);
     void navigate({ search: { ...search, ...patch } });
   }
 
@@ -90,11 +93,18 @@ function ShopPage() {
               {L(lang, "لا يوجد صنف بهذه التصفية.", "Nothing matches these filters.")}
             </p>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {list.map((p) => (
-                <ProductCard key={p.sku} product={p} />
-              ))}
-            </div>
+            <>
+                <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+                {list.slice(0, shown).map((p) => (
+                  <ProductCard key={p.sku} product={p} />
+                ))}
+              </div>
+              {shown < list.length && (
+                <button type="button" onClick={() => setShown((n) => n + 36)} className="mt-6 rounded-full border border-ink px-5 py-2.5 text-sm font-semibold">
+                  {L(lang, "المزيد من الأصناف", "More items")}
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>

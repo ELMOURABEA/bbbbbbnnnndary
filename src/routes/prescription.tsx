@@ -1,8 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Shell } from "@/components/shell";
-import { branches } from "@/data/network";
-import { L, useBendary } from "@/lib/store";
+import { L, useBendary, useBranchBook } from "@/lib/store";
 
 export const Route = createFileRoute("/prescription")({
   head: () => ({ meta: [{ title: "الروشتة | El-Bendary" }] }),
@@ -11,6 +10,7 @@ export const Route = createFileRoute("/prescription")({
 
 function RxPage() {
   const lang = useBendary((s) => s.lang);
+  const branches = useBranchBook();
   const addRx = useBendary((s) => s.addRx);
   const rxs = useBendary((s) => s.rxs);
   const [done, setDone] = useState<string | null>(null);
